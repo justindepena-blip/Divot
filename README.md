@@ -1,25 +1,100 @@
-# CODING AGENTS: READ THIS FIRST
+# Divot
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Free golf GPS, scorecard and shot tracking. Real device location, real
+OpenStreetMap course data for New Jersey and New York, real satellite imagery.
+No accounts, no paywalls, no fees.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+React + TypeScript + Vite. Builds to a static site you can host anywhere and add
+to your phone's home screen.
 
-## What you should do — IMPORTANT
+## Run it
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # → dist/
+npm run preview  # serve the built output
+```
 
-**Read `project/Divot Golf.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+Geolocation needs a **secure context**: `localhost` in development, HTTPS in
+production. Opened over plain `http://` from another device, the app loads but
+never gets a fix.
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+## Deploy
 
-## About the design files
+`.github/workflows/deploy.yml` builds and publishes `dist/` on every push to
+`main`. Turn it on once: **Settings → Pages → Source: GitHub Actions**. The app
+then lives at `https://<user>.github.io/<repo>/`.
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+The build uses a relative base, so the same `dist/` also works on Netlify Drop,
+Cloudflare Pages, or any static host without reconfiguring.
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+On your phone: open the URL → **Share → Add to Home Screen**. It launches full
+screen, and the round persists on the device.
 
-## Bundle contents
+## The five screens
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Divot: Free Golf Scorecard` project files (HTML prototypes, assets, components)
+| Screen | What it does |
+| --- | --- |
+| **PLAY** | Rangefinder. Live distance to the pin, front/back, plays-like, and a club suggestion computed per hole from your averages. |
+| **SHOTS** | Drops a GPS point at each ball position and measures every leg, over satellite imagery. |
+| **CARD** | Scorecard, two ways: `TAP` (one hole at a time, with putts, tee shot and GIR) or `GRID` (all 18 at once). |
+| **RECAP** | Totals versus par, hole-by-hole bars, birdies, pars, greens in regulation, putts. |
+| **GROUP** | Live leaderboard, gross or net, plus share-a-round. **Mocked** — see below. |
+
+Tapping the course bar on PLAY opens course search: any course in NJ or NY by
+name, or `NEAR ME` for everything within 30 km.
+
+## How it works
+
+| Concern | Source |
+| --- | --- |
+| Courses, holes, pars, greens | OpenStreetMap via the Overpass API. Free, no key. Search is bounded to the NJ/NY box. |
+| Satellite imagery | Esri World Imagery tiles, drawn with Leaflet. Free with attribution, shown bottom-right. |
+| Distances | Haversine from the device's `watchPosition` fix to the hole's green. |
+| Storage | `localStorage`, key `divot.v2` — course, pins, card, putts, fairways, GIR, shots. |
+
+OSM hole coverage across NJ/NY is good but not universal. Where a green is
+missing, tap it once on the satellite view and that pin is saved for the hole.
+
+## Layout
+
+```
+src/
+  App.tsx              screen switching, sheets, wiring
+  config.ts            accent, units, tile + Overpass endpoints
+  theme.ts             design tokens from the source design
+  screens/             Rangefinder, Shots, Scorecard, Recap, Group
+  sheets/              CourseSheet (search), ShareSheet
+  components/          HoleMap, TabBar, HoleStepper, MapFrame, Segmented, Sheet
+  lib/                 geo, golf, overpass, round, derive, leaderboard, storage
+  state/               useRound, useGeolocation, useCourseSearch
+```
+
+`lib/derive.ts` turns the saved round plus the current fix into everything the
+screens render — every distance, colour and total lives there rather than in the
+components.
+
+### Settings
+
+`src/config.ts` holds the three tweakables the design exposed: `accent`,
+`units` (`yards` | `meters`), and `showShotLabels`. The design has no settings
+screen, so they stay configuration — change the value and rebuild.
+
+## Not real yet
+
+- **Live score sync between players' phones.** Needs a server. The GROUP screen
+  and the round-share sheet render the design's placeholder group; the data
+  lives in `src/lib/leaderboard.ts` so a real feed replaces one file. Supabase's
+  free tier covers round codes and score sync.
+- **Offline tile caching.** Map tiles need signal. A service worker would fix it.
+- **Handicap index** from completed rounds — the leaderboard's HCP values are
+  fixed placeholders.
+
+## Design source
+
+The design this implements lives in `project/`, exported from Claude Design:
+`project/Divot Golf.dc.html` is the authored design, `chats/` is the
+conversation it came out of, and `docs/handoff.md` is the original handoff note.
+`project/site/` and `project/divot-app.html` are the older single-file prototype
+export — superseded by this app, kept for reference.

@@ -1,0 +1,134 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #08090a;
+  color: #f2f5f4;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* One-handed, on a course, in bright sun: no rubber-banding, no zoom flash,
+     no blue tap squares over the controls. */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: #2fa9e8;
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+}
+
+/* The app column — full-bleed on a phone, centred on anything wider. */
+.app {
+  height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: #0b0d0e;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Clears the status bar / notch. 54px is the design's inset. */
+  padding-top: max(54px, calc(env(safe-area-inset-top, 0px) + 12px));
+  padding-bottom: 8px;
+}
+
+.tabbar {
+  display: flex;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(11, 13, 14, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 9px 8px max(26px, env(safe-area-inset-bottom, 0px));
+}
+
+.sheet-body {
+  padding-bottom: max(30px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+}
+
+/* Hover affordances — the design's `style-hover` attributes.
+   Guarded so a finger tap on a touch screen never leaves a stuck hover. */
+@media (hover: hover) {
+  .hov-panel:hover {
+    background: #14181a;
+  }
+  .hov-accent-border:hover {
+    border-color: rgba(47, 169, 232, 0.4);
+  }
+  .hov-accent-text:hover {
+    color: #8ed2f7;
+  }
+  .hov-soft:hover {
+    color: #dce3e4;
+  }
+  .hov-line:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .hov-bright:hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* Give every tappable control the pressed feedback a native app has. */
+.tap {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.12s ease;
+}
+.tap:active {
+  opacity: 0.72;
+}
+
+/* ── Leaflet, restyled for the dark course-side palette ───────────────── */
+
+.leaflet-container {
+  background: #0b0d0e;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.leaflet-control-attribution {
+  background: rgba(11, 13, 14, 0.7) !important;
+  color: #6e7a7d !important;
+  font-size: 7px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #8b9497 !important;
+}
+
+/* Yardage labels drawn on the map. */
+.dv-tip {
+  background: rgba(11, 13, 14, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #e4eaeb !important;
+  font: 500 9px 'JetBrains Mono', ui-monospace, monospace !important;
+  box-shadow: none !important;
+  padding: 3px 6px !important;
+}
+
+.dv-tip:before {
+  display: none !important;
+}
