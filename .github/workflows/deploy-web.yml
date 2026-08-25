@@ -35,7 +35,11 @@ jobs:
       # _expo/ directory is never treated as a Jekyll internal path.
       - run: touch dist/.nojekyll
 
+      # enablement: true turns Pages on for the repo if it isn't already,
+      # so no manual step in repo settings is needed.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
