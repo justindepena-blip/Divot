@@ -1,8 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { HoleNavHeader } from '../components/HoleNavHeader';
-import { HoleSchematic } from '../components/HoleSchematic';
-import { OutlineButton } from '../components/Buttons';
+import { SatelliteMap } from '../components/SatelliteMap';
 import { DivotState } from '../state/useDivotState';
 import { ACCENT, colors, fonts } from '../theme';
 
@@ -16,24 +15,15 @@ export function ShotsScreen({ state }: { state: DivotState }) {
         onNext={state.nextHole}
       />
 
-      <HoleSchematic hole={state.hole} height={330}>
-        <View style={styles.ballDot} />
-        <View style={styles.lineToShot1} />
-        <View style={styles.shot1Marker} />
-        <View style={styles.lineToPin} />
-        <View style={styles.pinMarker} />
-        {state.showShotLabels && (
-          <>
-            <View style={[styles.shotCallout, { left: '38%', bottom: 96 }]}>
-              <Text style={styles.shotCalloutText}>1 · DRIVER 268</Text>
-            </View>
-            <View style={[styles.shotCallout, { left: '56%', bottom: 214 }]}>
-              <Text style={styles.shotCalloutText}>2 · 7 IRON 152</Text>
-            </View>
-          </>
-        )}
-        <Text style={styles.dragHint}>DRAG A MARKER TO CORRECT</Text>
-      </HoleSchematic>
+      <SatelliteMap
+        center={state.mapCenter}
+        pin={state.pin}
+        pos={state.pos}
+        shots={state.shotPoints}
+        hint={state.shotHint}
+        distanceLabel={state.distanceLabel}
+        onPickPin={state.setPin}
+      />
 
       <View style={styles.body}>
         <View>
@@ -46,13 +36,30 @@ export function ShotsScreen({ state }: { state: DivotState }) {
                 <Text style={styles.shotClub}>{sh.club}</Text>
                 <Text style={styles.shotNote}>{sh.note}</Text>
               </View>
-              <Text style={styles.shotDist}>{sh.dist}</Text>
+              <Text style={[styles.shotDist, { color: sh.color }]}>{sh.dist}</Text>
               <Text style={styles.shotUnit}>{state.unitLabel}</Text>
             </View>
           ))}
+
+          {state.shots.length === 0 && (
+            <Text style={styles.empty}>
+              NO SHOTS ON THIS HOLE YET. STAND OVER THE BALL AND TAP BELOW — EACH TAP DROPS A GPS
+              POINT AND MEASURES THE LEG.
+            </Text>
+          )}
         </View>
 
-        <OutlineButton label="Add shot from here" onPress={() => {}} />
+        {/* Disabled until there is a fix to attach the shot to. */}
+        <Pressable
+          onPress={state.addShot}
+          disabled={!state.gpsLocked}
+          style={[styles.addShot, { opacity: state.gpsLocked ? 1 : 0.6 }]}
+        >
+          <View style={[styles.dot, { backgroundColor: state.gpsLocked ? ACCENT : '#D9A94A' }]} />
+          <Text style={styles.addShotLabel}>
+            {state.gpsLocked ? 'Add shot at my position' : 'Waiting for GPS…'}
+          </Text>
+        </Pressable>
 
         <View style={styles.avgCard}>
           <Text style={styles.avgCardLabel}>YOUR CLUB AVERAGES</Text>
@@ -71,86 +78,6 @@ export function ShotsScreen({ state }: { state: DivotState }) {
 }
 
 const styles = StyleSheet.create({
-  ballDot: {
-    position: 'absolute',
-    left: '33%',
-    bottom: 34,
-    width: 9,
-    height: 9,
-    marginLeft: -4,
-    borderRadius: 5,
-    backgroundColor: colors.text,
-  },
-  lineToShot1: {
-    position: 'absolute',
-    left: '33%',
-    bottom: 38,
-    width: '34%',
-    height: 150,
-    borderLeftWidth: 1,
-    borderTopWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(47,169,232,0.5)',
-  },
-  shot1Marker: {
-    position: 'absolute',
-    left: '67%',
-    bottom: 184,
-    width: 9,
-    height: 9,
-    marginLeft: -4,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: ACCENT,
-    backgroundColor: colors.holeBgBottom,
-  },
-  lineToPin: {
-    position: 'absolute',
-    left: '53%',
-    bottom: 188,
-    width: '14%',
-    height: 66,
-    borderRightWidth: 1,
-    borderTopWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(47,169,232,0.5)',
-  },
-  pinMarker: {
-    position: 'absolute',
-    left: '53%',
-    bottom: 250,
-    width: 20,
-    height: 20,
-    marginLeft: -10,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(47,169,232,0.2)',
-  },
-  shotCallout: {
-    position: 'absolute',
-    backgroundColor: 'rgba(11,13,14,0.85)',
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-  },
-  shotCalloutText: {
-    fontFamily: fonts.mono500,
-    fontSize: 9,
-    letterSpacing: 0.6,
-    color: colors.textDim,
-  },
-  dragHint: {
-    position: 'absolute',
-    right: 14,
-    bottom: 14,
-    fontFamily: fonts.mono400,
-    fontSize: 8,
-    letterSpacing: 1,
-    color: colors.mute,
-  },
   body: {
     paddingHorizontal: 20,
     paddingVertical: 18,
@@ -197,6 +124,35 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono400,
     fontSize: 9,
     color: colors.muteFaint,
+  },
+  empty: {
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    fontFamily: fonts.mono400,
+    fontSize: 10,
+    lineHeight: 16,
+    color: colors.mute,
+  },
+  addShot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 12,
+    paddingVertical: 14,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  addShotLabel: {
+    fontFamily: fonts.grotesk600,
+    fontSize: 13,
+    color: colors.text,
   },
   avgCard: {
     backgroundColor: colors.surface,

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { BottomNav } from './components/BottomNav';
+import { CourseSheet } from './components/CourseSheet';
 import { RangefinderScreen } from './screens/RangefinderScreen';
 import { ShotsScreen } from './screens/ShotsScreen';
 import { ScorecardScreen } from './screens/ScorecardScreen';
@@ -28,6 +29,7 @@ export function DivotApp() {
         </ScrollView>
         <BottomNav active={state.screen} onSelect={state.setScreen} bottomInset={insets.bottom} />
       </SafeAreaView>
+      <CourseSheet state={state} />
     </View>
   );
 }

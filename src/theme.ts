@@ -43,6 +43,8 @@ export const colors = {
   faintTrack: '#3E4749',
   warm: '#E8894D',
   hot: '#E8574D',
+  /** Par column in the recap chart — deliberately not the accent. */
+  parBar: '#495356',
   fairway: '#16261D',
   fairwayLight: '#193024',
   green: '#1E3A29',

@@ -1,14 +1,55 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { HoleNavHeader } from '../components/HoleNavHeader';
-import { HoleSchematic } from '../components/HoleSchematic';
+import { SatelliteMap } from '../components/SatelliteMap';
 import { OutlineButton } from '../components/Buttons';
 import { DivotState } from '../state/useDivotState';
 import { ACCENT, colors, fonts } from '../theme';
 
 export function RangefinderScreen({ state }: { state: DivotState }) {
+  const gpsColor = state.gpsLocked ? ACCENT : '#D9A94A';
+
   return (
     <View>
+      {/* Course bar — opens the search sheet. */}
+      <Pressable style={styles.courseBar} onPress={state.openSheet}>
+        <View style={{ gap: 5, flex: 1 }}>
+          <Text style={styles.courseName} numberOfLines={1}>
+            {state.courseName}
+          </Text>
+          <Text style={styles.courseMeta}>
+            {state.teeName} TEES · PAR {state.coursePar} · {state.courseLength} {state.unitLabel}
+          </Text>
+        </View>
+        <Text style={styles.change}>CHANGE</Text>
+      </Pressable>
+
+      {/* Live GPS status. */}
+      <View
+        style={[
+          styles.gpsStrip,
+          {
+            backgroundColor: state.gpsLocked ? 'rgba(47,169,232,0.07)' : 'rgba(217,169,74,0.07)',
+            borderColor: state.gpsLocked ? 'rgba(47,169,232,0.22)' : 'rgba(217,169,74,0.24)',
+          },
+        ]}
+      >
+        <View style={styles.gpsLeft}>
+          <View style={[styles.dot, { backgroundColor: gpsColor }]} />
+          <Text style={[styles.gpsLabel, { color: gpsColor }]} numberOfLines={1}>
+            {state.gpsLabel}
+          </Text>
+        </View>
+        <View style={styles.gpsActions}>
+          <Pressable onPress={() => state.pos && state.setPin(state.pos)} hitSlop={6}>
+            <Text style={styles.captureText}>{state.pin ? 'PIN SET' : 'TAP MAP FOR PIN'}</Text>
+          </Pressable>
+          <Pressable onPress={state.retryGps} hitSlop={6}>
+            <Text style={styles.retryText}>RETRY</Text>
+          </Pressable>
+        </View>
+      </View>
+
       <HoleNavHeader
         title={`Hole ${state.hole}`}
         subtitle={`PAR ${state.par} · ${state.holeYds} ${state.unitLabel}`}
@@ -16,31 +57,31 @@ export function RangefinderScreen({ state }: { state: DivotState }) {
         onNext={state.nextHole}
       />
 
-      <HoleSchematic hole={state.hole} height={296}>
-        <View style={styles.pinLine} />
-        <View style={styles.pinMarker} />
-        <View style={styles.playerDot} />
-        <View style={styles.pinCallout}>
-          <Text style={styles.pinCalloutText}>
-            {state.toPin} {state.unitLabel} PIN
-          </Text>
-        </View>
-        <View style={styles.windBox}>
-          <Text style={styles.captionLabel}>WIND</Text>
-          <Text style={styles.captionValue}>7 mph ↘</Text>
-        </View>
-        <View style={[styles.windBox, { right: 14, alignItems: 'flex-end' }]}>
+      <SatelliteMap
+        center={state.mapCenter}
+        pin={state.pin}
+        pos={state.pos}
+        hint={state.mapHint}
+        distanceLabel={state.distanceLabel}
+        onPickPin={state.setPin}
+      >
+        <View style={styles.playsLikeBox} pointerEvents="none">
           <Text style={styles.captionLabel}>PLAYS LIKE</Text>
           <Text style={[styles.captionValue, { color: ACCENT }]}>
             {state.playsLike} {state.unitLabel}
           </Text>
         </View>
-      </HoleSchematic>
+      </SatelliteMap>
 
       <View style={styles.body}>
         <View style={styles.bigRow}>
           <Text style={styles.bigNumber}>{state.toPin}</Text>
-          <Text style={styles.bigUnit}>{state.unitLabel} TO PIN</Text>
+          <View style={styles.bigSide}>
+            <Text style={styles.bigUnit}>{state.unitLabel} TO PIN</Text>
+            <Text style={[styles.pinSource, { color: state.pinSourceColor }]}>
+              {state.pinSource}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.tileRow}>
@@ -64,73 +105,111 @@ export function RangefinderScreen({ state }: { state: DivotState }) {
             <Text style={styles.clubCardValue}>{state.suggestedClub}</Text>
           </View>
           <Text style={styles.avgText}>
-            your avg{'\n'}
-            {state.clubAvg} {state.unitLabel}
+            avg {state.clubAvg} {state.unitLabel}
+            {'\n'}
+            <Text style={{ color: colors.mute }}>{state.clubDelta}</Text>
           </Text>
         </View>
 
-        <OutlineButton label={`Enter score for hole ${state.hole}`} onPress={() => state.setScreen('card')} />
+        <OutlineButton
+          label={`Enter score for hole ${state.hole}`}
+          onPress={() => state.setScreen('card')}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pinLine: {
-    position: 'absolute',
-    left: '50%',
-    top: 52,
-    bottom: 56,
-    width: 0,
-    borderLeftWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(47,169,232,0.55)',
+  courseBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
   },
-  pinMarker: {
-    position: 'absolute',
-    left: '50%',
-    top: 44,
-    width: 16,
-    height: 16,
-    marginLeft: -8,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(47,169,232,0.18)',
+  courseName: {
+    fontFamily: fonts.grotesk500,
+    fontSize: 13,
+    color: colors.text,
   },
-  playerDot: {
-    position: 'absolute',
-    left: '50%',
-    bottom: 48,
-    width: 8,
-    height: 8,
-    marginLeft: -4,
-    borderRadius: 4,
-    backgroundColor: colors.text,
+  courseMeta: {
+    fontFamily: fonts.mono400,
+    fontSize: 9,
+    letterSpacing: 0.9,
+    color: colors.mute,
   },
-  pinCallout: {
+  change: {
+    fontFamily: fonts.mono400,
+    fontSize: 11,
+    color: ACCENT,
+  },
+  gpsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 13,
+    borderRadius: 11,
+    borderWidth: 1,
+  },
+  gpsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    flexShrink: 1,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  gpsLabel: {
+    fontFamily: fonts.mono400,
+    fontSize: 9,
+    letterSpacing: 0.9,
+    flexShrink: 1,
+  },
+  gpsActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  captureText: {
+    fontFamily: fonts.mono500,
+    fontSize: 9,
+    letterSpacing: 0.7,
+    color: ACCENT,
+  },
+  retryText: {
+    fontFamily: fonts.mono400,
+    fontSize: 9,
+    letterSpacing: 0.7,
+    color: colors.mute,
+  },
+  playsLikeBox: {
     position: 'absolute',
-    left: '50%',
-    top: 110,
-    transform: [{ translateX: -46 }],
+    right: 12,
+    bottom: 26,
+    alignItems: 'flex-end',
+    gap: 5,
     backgroundColor: 'rgba(11,13,14,0.82)',
     borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 9,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  pinCalloutText: {
-    fontFamily: fonts.mono500,
-    fontSize: 10,
-    letterSpacing: 0.8,
-    color: colors.textDim,
-  },
-  windBox: {
-    position: 'absolute',
-    left: 14,
-    bottom: 14,
-    gap: 6,
+    borderColor: colors.borderSubtle,
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 9,
   },
   captionLabel: {
     fontFamily: fonts.mono400,
@@ -160,12 +239,22 @@ const styles = StyleSheet.create({
     letterSpacing: -3,
     color: colors.text,
   },
+  bigSide: {
+    gap: 7,
+    paddingBottom: 8,
+    maxWidth: 130,
+  },
   bigUnit: {
     fontFamily: fonts.mono400,
     fontSize: 11,
     letterSpacing: 1.8,
     color: colors.mute,
-    paddingBottom: 8,
+  },
+  pinSource: {
+    fontFamily: fonts.mono400,
+    fontSize: 8,
+    lineHeight: 11,
+    letterSpacing: 0.8,
   },
   tileRow: {
     flexDirection: 'row',
@@ -217,7 +306,7 @@ const styles = StyleSheet.create({
   avgText: {
     fontFamily: fonts.mono400,
     fontSize: 10,
-    lineHeight: 14,
+    lineHeight: 15,
     color: colors.muteStrong,
     textAlign: 'right',
   },

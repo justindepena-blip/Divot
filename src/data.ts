@@ -1,32 +1,9 @@
-export const PARS = [4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5];
-export const YARDS = [398, 512, 425, 168, 441, 388, 412, 192, 538, 405, 377, 205, 545, 418, 392, 158, 436, 521];
-
-export const SCORE_NAMES: Record<string, string> = {
-  '-3': 'Albatross',
-  '-2': 'Eagle',
-  '-1': 'Birdie',
-  '0': 'Par',
-  '1': 'Bogey',
-  '2': 'Double bogey',
-  '3': 'Triple bogey',
-};
-
-export const COURSE_NAME = 'Kestrel Ridge GC';
-
-export type FairwayResult = 'left' | 'hit' | 'right' | '-';
-
-export const INITIAL_SCORES: (number | null)[] = [4, 5, 3, 3, 5, 4, null, null, null, null, null, null, null, null, null, null, null, null];
-export const INITIAL_PUTTS: (number | null)[] = [2, 2, 1, 2, 3, 2, 2, null, null, null, null, null, null, null, null, null, null, null];
-export const INITIAL_FW: (FairwayResult | null)[] = ['hit', 'left', 'hit', '-', 'right', 'hit', null, null, null, null, null, null, null, null, null, null, null, null];
-export const INITIAL_GIR: boolean[] = [true, false, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false];
-
-// Static demo content — placeholders the way the design left them (drop real
-// shot-tracking / group data in later).
-export const DEMO_SHOTS = [
-  { n: 1, club: 'Driver', note: 'Fairway · left centre', distYds: 268 },
-  { n: 2, club: '7 iron', note: 'Green · 24 ft past', distYds: 152 },
-  { n: 3, club: 'Putter', note: 'Holed', distYds: 8 },
-];
+// Course, hole and shot data are now real — loaded from OpenStreetMap and the
+// device's GPS (see src/lib/overpass.ts and src/state/useLocation.ts).
+//
+// What remains here is the group play content, which cannot be real without a
+// server to sync scores between players' phones. Replace this file when that
+// backend exists; nothing else needs to change.
 
 export const CLUB_AVERAGES = [
   { name: 'DRIVER', distYds: 254 },
@@ -47,7 +24,14 @@ export const GROUP_STATS = [
   { value: '14', label: 'TEAM PTS', accent: false },
 ];
 
-export type GroupPlayer = { name: string; initials: string; hcp: number; thru: number; gross: number; delta: number };
+export type GroupPlayer = {
+  name: string;
+  initials: string;
+  hcp: number;
+  thru: number;
+  gross: number;
+  delta: number;
+};
 
 export const GROUP_PLAYERS: GroupPlayer[] = [
   { name: 'Dana Whitlock', initials: 'DW', hcp: 8, thru: 7, gross: 31, delta: 3 },
