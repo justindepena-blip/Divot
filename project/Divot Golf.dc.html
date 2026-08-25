@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>.leaflet-container{background:#0B0D0E;font-family:'JetBrains Mono',monospace}.leaflet-control-attribution{background:rgba(11,13,14,.7)!important;color:#6E7A7D!important;font-size:7px!important}.leaflet-control-attribution a{color:#8B9497!important}.dv-tip{background:rgba(11,13,14,.86)!important;border:1px solid rgba(255,255,255,.18)!important;color:#E4EAEB!important;font:500 9px 'JetBrains Mono',monospace!important;box-shadow:none!important;padding:3px 6px!important}.dv-tip:before{display:none!important}</style><style>body{margin:0;background:#08090A;font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#2FA9E8;text-decoration:none}a:hover{color:#6BC4F2}*{box-sizing:border-box}::-webkit-scrollbar{width:0}</style></helmet>
+<div style="--acc: {{ acc }}; min-height:100vh; background:radial-gradient(120% 80% at 50% 0%, #12181B 0%, #08090A 60%); display:flex; flex-direction:column; align-items:center; gap:26px; padding:44px 24px 64px">
+
+<div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+<div style="font:700 15px/1 'Space Grotesk',sans-serif; letter-spacing:.34em; color:#F2F5F4">DIVOT</div>
+<div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6E7A7D; text-transform:uppercase">gps · scorecard · shots · live group play</div>
+</div>
+
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#0B0D0E; color:#F2F5F4; position:relative; overflow:hidden">
+
+<div style="flex:1; overflow:auto; padding:54px 0 8px">
+
+<sc-if value="{{ isShots }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Shot tracking" style="display:flex; flex-direction:column">
+  <div style="padding:4px 20px 14px; display:flex; align-items:center; justify-content:space-between">
+    <div onClick="{{ prevHole }}" style="width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:#14181A; display:flex; align-items:center; justify-content:center; font:500 15px 'JetBrains Mono',monospace; color:#9AA4A7; cursor:pointer">&lsaquo;</div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px">
+      <div style="font:600 15px/1 'Space Grotesk',sans-serif">Shots · hole {{ hole }}</div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6E7A7D">PAR {{ par }} · {{ holeYds }} {{ unitLabel }}</div>
+    </div>
+    <div onClick="{{ nextHole }}" style="width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:#14181A; display:flex; align-items:center; justify-content:center; font:500 15px 'JetBrains Mono',monospace; color:#9AA4A7; cursor:pointer">&rsaquo;</div>
+  </div>
+
+  <div style="position:relative; height:300px; border-top:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07); overflow:hidden">
+    <div ref="{{ shotMapRef }}" style="position:absolute; inset:0"></div>
+    <div style="position:absolute; top:10px; left:12px; z-index:500; background:rgba(11,13,14,.82); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:6px 9px; font:400 8px/1.4 'JetBrains Mono',monospace; letter-spacing:.1em; color:#9AA4A7; max-width:68%">{{ shotHint }}</div>
+  </div>
+
+  <div style="padding:18px 20px 20px; display:flex; flex-direction:column; gap:16px">
+    <div style="display:flex; flex-direction:column; gap:2px">
+      <sc-for list="{{ shots }}" as="sh" hint-placeholder-count="3">
+        <div style="display:flex; align-items:center; gap:14px; padding:13px 0; border-top:1px solid rgba(255,255,255,.07)">
+          <div style="width:26px; height:26px; border-radius:50%; border:1px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font:500 10px/1 'JetBrains Mono',monospace; color:#9AA4A7">{{ sh.n }}</div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:4px">
+            <div style="font:500 13px/1 'Space Grotesk',sans-serif">{{ sh.club }}</div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ sh.note }}</div>
+          </div>
+          <div style="font:700 15px/1 'JetBrains Mono',monospace; color: {{ sh.color }}">{{ sh.dist }}</div>
+          <div style="font:400 9px/1 'JetBrains Mono',monospace; color:#596366">{{ unitLabel }}</div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ shotsEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 0; border-top:1px solid rgba(255,255,255,.07); font:400 10px/1.6 'JetBrains Mono',monospace; color:#6E7A7D">NO SHOTS ON THIS HOLE YET. STAND OVER THE BALL AND TAP BELOW — EACH TAP DROPS A GPS POINT AND MEASURES THE LEG.</div>
+      </sc-if>
+    </div>
+    <div onClick="{{ addShot }}" style="display:flex; align-items:center; justify-content:center; gap:9px; border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:14px; font:600 13px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="background:#14181A">
+      <div style="width:6px; height:6px; border-radius:50%; background: {{ gpsColor }}"></div>{{ addShotLabel }}</div>
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:15px; display:flex; flex-direction:column; gap:13px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">YOUR CLUB AVERAGES</div>
+      <div style="display:flex; gap:10px">
+        <sc-for list="{{ clubs }}" as="c" hint-placeholder-count="4">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+            <div style="font:500 15px/1 'JetBrains Mono',monospace">{{ c.dist }}</div>
+            <div style="font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ c.name }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPlay }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Rangefinder" style="display:flex; flex-direction:column">
+  <div onClick="{{ openSheet }}" style="margin:4px 20px 12px; display:flex; align-items:center; justify-content:space-between; background:#14181A; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:11px 14px; cursor:pointer" style-hover="border-color:rgba(47,169,232,.4)">
+    <div style="display:flex; flex-direction:column; gap:5px">
+      <div style="font:500 13px/1 'Space Grotesk',sans-serif">{{ courseName }}</div>
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6E7A7D">{{ teeName }} TEES · PAR {{ coursePar }} · {{ courseLen }} {{ unitLabel }}</div>
+    </div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">CHANGE</div>
+  </div>
+  <div style="margin:0 20px 12px; display:flex; align-items:center; justify-content:space-between; padding:10px 13px; border-radius:11px; background: {{ gpsBg }}; border:1px solid {{ gpsBd }}">
+    <div style="display:flex; align-items:center; gap:9px">
+      <div style="width:6px; height:6px; border-radius:50%; background: {{ gpsColor }}"></div>
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ gpsColor }}">{{ gpsLabel }}</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px">
+      <div onClick="{{ captureGreen }}" style="font:500 9px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--acc,#2FA9E8); cursor:pointer" style-hover="color:#8ED2F7">{{ captureLabel }}</div>
+      <div onClick="{{ recenter }}" style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:#6E7A7D; cursor:pointer" style-hover="color:#DCE3E4">RETRY</div>
+    </div>
+  </div>
+  <div style="padding:4px 20px 14px; display:flex; align-items:center; justify-content:space-between">
+    <div onClick="{{ prevHole }}" style="width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:#14181A; display:flex; align-items:center; justify-content:center; font:500 15px 'JetBrains Mono',monospace; color:#9AA4A7; cursor:pointer">‹</div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px">
+      <div style="font:600 15px/1 'Space Grotesk',sans-serif; letter-spacing:.02em">Hole {{ hole }}</div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6E7A7D">PAR {{ par }} · {{ holeYds }} {{ unitLabel }}</div>
+    </div>
+    <div onClick="{{ nextHole }}" style="width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:#14181A; display:flex; align-items:center; justify-content:center; font:500 15px 'JetBrains Mono',monospace; color:#9AA4A7; cursor:pointer">›</div>
+  </div>
+
+  <div style="position:relative; height:300px; border-top:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07); overflow:hidden">
+    <div ref="{{ playMapRef }}" style="position:absolute; inset:0"></div>
+    <div style="position:absolute; top:10px; left:12px; z-index:500; background:rgba(11,13,14,.82); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:6px 9px; font:400 8px/1.4 'JetBrains Mono',monospace; letter-spacing:.1em; color:#9AA4A7; max-width:68%">{{ mapHint }}</div>
+    <div style="position:absolute; right:12px; bottom:26px; z-index:500; display:flex; flex-direction:column; align-items:flex-end; gap:5px; background:rgba(11,13,14,.82); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 9px">
+      <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">PLAYS LIKE</div>
+      <div style="font:500 12px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">{{ playsLike }} {{ unitLabel }}</div>
+    </div>
+  </div>
+
+  <div style="padding:20px; display:flex; flex-direction:column; gap:16px">
+    <div style="display:flex; align-items:flex-end; justify-content:center; gap:10px">
+      <div style="font:700 82px/.8 'JetBrains Mono',monospace; letter-spacing:-.04em">{{ toPin }}</div>
+      <div style="display:flex; flex-direction:column; gap:7px; padding-bottom:8px">
+        <div style="font:400 11px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">{{ unitLabel }} TO PIN</div>
+        <div style="font:400 8px/1.3 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ pinSourceColor }}; max-width:120px">{{ pinSource }}</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px">
+      <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:11px; text-align:center; display:flex; flex-direction:column; gap:5px">
+        <div style="font:500 16px/1 'JetBrains Mono',monospace">{{ front }}</div>
+        <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">FRONT</div>
+      </div>
+      <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:11px; text-align:center; display:flex; flex-direction:column; gap:5px">
+        <div style="font:500 16px/1 'JetBrains Mono',monospace">{{ toPin }}</div>
+        <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:var(--acc,#2FA9E8)">PIN</div>
+      </div>
+      <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:11px; text-align:center; display:flex; flex-direction:column; gap:5px">
+        <div style="font:500 16px/1 'JetBrains Mono',monospace">{{ back }}</div>
+        <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">BACK</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(47,169,232,.08); border:1px solid rgba(47,169,232,.22); border-radius:12px; padding:13px 15px">
+      <div style="display:flex; flex-direction:column; gap:5px">
+        <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--acc,#2FA9E8)">SUGGESTED CLUB</div>
+        <div style="font:600 15px/1 'Space Grotesk',sans-serif">{{ club }}</div>
+      </div>
+      <div style="font:400 10px/1.5 'JetBrains Mono',monospace; color:#9AA4A7; text-align:right">avg {{ clubAvg }} {{ unitLabel }}<br><span style="color:#6E7A7D">{{ clubDelta }}</span></div>
+    </div>
+    <div onClick="{{ navCard }}" style="border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:14px; text-align:center; font:600 14px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="background:#14181A">Enter score for hole {{ hole }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Scorecard" style="padding:4px 20px 20px; display:flex; flex-direction:column; gap:18px">
+  <div style="display:flex; align-items:center; justify-content:space-between">
+    <div style="display:flex; flex-direction:column; gap:5px">
+      <div style="font:600 17px/1 'Space Grotesk',sans-serif">Scorecard</div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ courseName }} · THRU {{ thru }}</div>
+    </div>
+    <div style="display:flex; background:#14181A; border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:3px">
+      <div onClick="{{ setTap }}" style="padding:7px 11px; border-radius:7px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ tapBg }}; color: {{ tapFg }}">TAP</div>
+      <div onClick="{{ setGrid }}" style="padding:7px 11px; border-radius:7px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ gridBg }}; color: {{ gridFg }}">GRID</div>
+    </div>
+  </div>
+
+  <sc-if value="{{ isTap }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:18px">
+      <div style="display:flex; align-items:center; justify-content:space-between">
+        <div style="font:600 15px/1 'Space Grotesk',sans-serif">Hole {{ hole }}</div>
+        <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6E7A7D">PAR {{ par }} · {{ holeYds }} {{ unitLabel }}</div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:14px">
+        <div onClick="{{ decScore }}" style="width:56px; height:56px; border-radius:16px; background:#1C2124; border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font:400 26px/1 'Space Grotesk',sans-serif; color:#9AA4A7; cursor:pointer" style-hover="border-color:rgba(255,255,255,.3)">−</div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px">
+          <div style="font:700 62px/.85 'JetBrains Mono',monospace; color: {{ curColor }}">{{ curScore }}</div>
+          <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color: {{ curColor }}; text-transform:uppercase">{{ curLabel }}</div>
+        </div>
+        <div onClick="{{ incScore }}" style="width:56px; height:56px; border-radius:16px; background:#1C2124; border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font:400 26px/1 'Space Grotesk',sans-serif; color:#9AA4A7; cursor:pointer" style-hover="border-color:rgba(255,255,255,.3)">+</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:11px; border-top:1px solid rgba(255,255,255,.07); padding-top:16px">
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">PUTTS</div>
+          <div style="display:flex; gap:6px">
+            <sc-for list="{{ puttOpts }}" as="p" hint-placeholder-count="5">
+              <div onClick="{{ p.on }}" style="width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font:500 12px/1 'JetBrains Mono',monospace; cursor:pointer; background: {{ p.bg }}; color: {{ p.fg }}; border:1px solid {{ p.bd }}">{{ p.n }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">TEE SHOT</div>
+          <div style="display:flex; gap:6px">
+            <sc-for list="{{ fwOpts }}" as="f" hint-placeholder-count="3">
+              <div onClick="{{ f.on }}" style="padding:9px 12px; border-radius:10px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.06em; cursor:pointer; background: {{ f.bg }}; color: {{ f.fg }}; border:1px solid {{ f.bd }}">{{ f.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">GREEN IN REG</div>
+          <div onClick="{{ toggleGir }}" style="width:52px; height:30px; border-radius:15px; padding:3px; cursor:pointer; background: {{ girTrack }}; display:flex; justify-content: {{ girJustify }}">
+            <div style="width:24px; height:24px; border-radius:50%; background:#F2F5F4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px">
+      <div onClick="{{ prevHole }}" style="width:56px; border:1px solid rgba(255,255,255,.12); border-radius:12px; display:flex; align-items:center; justify-content:center; font:400 15px 'JetBrains Mono',monospace; color:#9AA4A7; cursor:pointer">‹</div>
+      <div onClick="{{ saveNext }}" style="flex:1; background:var(--acc,#2FA9E8); color:#06181F; border-radius:12px; padding:15px; text-align:center; font:600 14px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="filter:brightness(1.08)">{{ saveLabel }}</div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">RUNNING TOTAL</div>
+      <div style="display:flex; align-items:baseline; gap:10px">
+        <div style="font:700 20px/1 'JetBrains Mono',monospace">{{ totalScore }}</div>
+        <div style="font:500 12px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">{{ deltaText }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">OUT</div>
+      <div style="display:flex; align-items:center">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">HOLE</div>
+        <sc-for list="{{ front9 }}" as="h" hint-placeholder-count="9"><div style="flex:1; text-align:center; font:400 10px/1 'JetBrains Mono',monospace; color:#9AA4A7">{{ h.n }}</div></sc-for>
+        <div style="width:32px; text-align:right; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">TOT</div>
+      </div>
+      <div style="display:flex; align-items:center; padding:7px 0; border-top:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07)">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">PAR</div>
+        <sc-for list="{{ front9 }}" as="h" hint-placeholder-count="9"><div style="flex:1; text-align:center; font:400 11px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ h.par }}</div></sc-for>
+        <div style="width:32px; text-align:right; font:400 11px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ parOut }}</div>
+      </div>
+      <div style="display:flex; align-items:center; padding-top:5px">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">SCORE</div>
+        <sc-for list="{{ front9 }}" as="h" hint-placeholder-count="9">
+          <div onClick="{{ h.on }}" style="flex:1; display:flex; justify-content:center; cursor:pointer">
+            <div style="width:26px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font:500 13px/1 'JetBrains Mono',monospace; color: {{ h.color }}; background: {{ h.bg }}; border:1px solid {{ h.bd }}">{{ h.score }}</div>
+          </div>
+        </sc-for>
+        <div style="width:32px; text-align:right; font:700 13px/1 'JetBrains Mono',monospace">{{ scoreOut }}</div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">IN</div>
+      <div style="display:flex; align-items:center">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">HOLE</div>
+        <sc-for list="{{ back9 }}" as="h" hint-placeholder-count="9"><div style="flex:1; text-align:center; font:400 10px/1 'JetBrains Mono',monospace; color:#9AA4A7">{{ h.n }}</div></sc-for>
+        <div style="width:32px; text-align:right; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">TOT</div>
+      </div>
+      <div style="display:flex; align-items:center; padding:7px 0; border-top:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07)">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">PAR</div>
+        <sc-for list="{{ back9 }}" as="h" hint-placeholder-count="9"><div style="flex:1; text-align:center; font:400 11px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ h.par }}</div></sc-for>
+        <div style="width:32px; text-align:right; font:400 11px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ parIn }}</div>
+      </div>
+      <div style="display:flex; align-items:center; padding-top:5px">
+        <div style="width:44px; font:400 9px/1 'JetBrains Mono',monospace; color:#6E7A7D">SCORE</div>
+        <sc-for list="{{ back9 }}" as="h" hint-placeholder-count="9">
+          <div onClick="{{ h.on }}" style="flex:1; display:flex; justify-content:center; cursor:pointer">
+            <div style="width:26px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font:500 13px/1 'JetBrains Mono',monospace; color: {{ h.color }}; background: {{ h.bg }}; border:1px solid {{ h.bd }}">{{ h.score }}</div>
+          </div>
+        </sc-for>
+        <div style="width:32px; text-align:right; font:700 13px/1 'JetBrains Mono',monospace">{{ scoreIn }}</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:15px 16px; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">TOTAL · THRU {{ thru }}</div>
+      <div style="display:flex; align-items:baseline; gap:10px">
+        <div style="font:700 22px/1 'JetBrains Mono',monospace">{{ totalScore }}</div>
+        <div style="font:500 12px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">{{ deltaText }}</div>
+      </div>
+    </div>
+    <div style="font:400 9px/1.5 'JetBrains Mono',monospace; color:#596366">TAP ANY CELL TO JUMP TO THAT HOLE</div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSummary }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Round recap" style="padding:4px 20px 20px; display:flex; flex-direction:column; gap:20px">
+  <div style="display:flex; flex-direction:column; gap:5px">
+    <div style="font:600 17px/1 'Space Grotesk',sans-serif">Round recap</div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ courseName }} · TODAY · THRU {{ thru }}</div>
+  </div>
+
+  <div style="display:flex; align-items:flex-end; gap:16px; padding-bottom:4px">
+    <div style="font:700 76px/.8 'JetBrains Mono',monospace; letter-spacing:-.04em">{{ totalScore }}</div>
+    <div style="display:flex; flex-direction:column; gap:6px; padding-bottom:8px">
+      <div style="font:600 20px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">{{ deltaText }}</div>
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6E7A7D">VS PAR {{ parThru }}</div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:9px">
+    <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">HOLE BY HOLE</div>
+    <div style="display:flex; align-items:flex-end; gap:3px; height:74px; border-bottom:1px solid rgba(255,255,255,.1); padding-bottom:0">
+      <sc-for list="{{ played }}" as="p" hint-placeholder-count="6">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:4px">
+          <div style="width:100%; max-width:20px; border-radius:3px 3px 0 0; height: {{ p.barH }}; background: {{ p.color }}"></div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex; gap:3px">
+      <sc-for list="{{ played }}" as="p" hint-placeholder-count="6">
+        <div style="flex:1; text-align:center; font:400 8px/1 'JetBrains Mono',monospace; color:#596366">{{ p.n }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">{{ birdies }}</div>
+      <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">BIRDIES OR BETTER</div>
+    </div>
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace">{{ pars }}</div>
+      <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">PARS</div>
+    </div>
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace">{{ girPct }}%</div>
+      <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">GREENS IN REG</div>
+    </div>
+    <div style="background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace">{{ puttsTotal }}</div>
+      <div style="font:400 8px/1 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">PUTTS</div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px">
+    <div onClick="{{ navCard }}" style="flex:1; border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:14px; text-align:center; font:600 13px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="background:#14181A">Edit card</div>
+    <div style="flex:1; background:var(--acc,#2FA9E8); color:#06181F; border-radius:12px; padding:14px; text-align:center; font:600 13px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="filter:brightness(1.08)">Share round</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isFriends }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Live leaderboard" style="padding:4px 20px 20px; display:flex; flex-direction:column; gap:18px">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between">
+    <div style="display:flex; flex-direction:column; gap:5px">
+      <div style="font:600 17px/1 'Space Grotesk',sans-serif">Saturday Group</div>
+      <div style="display:flex; align-items:center; gap:7px">
+        <div style="width:6px; height:6px; border-radius:50%; background:var(--acc,#2FA9E8)"></div>
+        <div style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6E7A7D">LIVE · 4 PLAYERS</div>
+      </div>
+    </div>
+    <div style="display:flex; background:#14181A; border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:3px">
+      <div onClick="{{ setGross }}" style="padding:8px 11px; border-radius:7px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ grossBg }}; color: {{ grossFg }}">GROSS</div>
+      <div onClick="{{ setNet }}" style="padding:8px 11px; border-radius:7px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ netBg }}; color: {{ netFg }}">NET</div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <sc-for list="{{ board }}" as="b" hint-placeholder-count="4">
+      <div style="display:flex; align-items:center; gap:13px; padding:14px 15px; border-radius:14px; background: {{ b.bg }}; border:1px solid {{ b.bd }}">
+        <div style="width:20px; font:500 12px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ b.pos }}</div>
+        <div style="width:36px; height:36px; border-radius:50%; background:#1C2124; border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font:500 11px/1 'JetBrains Mono',monospace; color:#9AA4A7">{{ b.initials }}</div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:5px">
+          <div style="font:500 13px/1 'Space Grotesk',sans-serif; color: {{ b.nameColor }}">{{ b.name }}</div>
+          <div style="font:400 10px/1 'JetBrains Mono',monospace; color:#6E7A7D">THRU {{ b.thru }} · HCP {{ b.hcp }}</div>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:11px">
+          <div style="font:500 13px/1 'JetBrains Mono',monospace; color: {{ b.relColor }}">{{ b.rel }}</div>
+          <div style="font:700 17px/1 'JetBrains Mono',monospace">{{ b.total }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex; gap:10px">
+    <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace; color:var(--acc,#2FA9E8)">2</div>
+      <div style="font:400 8px/1.2 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">SKINS WON</div>
+    </div>
+    <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace">1 UP</div>
+      <div style="font:400 8px/1.2 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">MATCH VS DANA</div>
+    </div>
+    <div style="flex:1; background:#14181A; border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:7px">
+      <div style="font:700 19px/1 'JetBrains Mono',monospace">14</div>
+      <div style="font:400 8px/1.2 'JetBrains Mono',monospace; letter-spacing:.12em; color:#6E7A7D">TEAM PTS</div>
+    </div>
+  </div>
+
+  <div onClick="{{ openShare }}" style="border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:14px; text-align:center; font:600 13px/1 'Space Grotesk',sans-serif; cursor:pointer" style-hover="background:#14181A">Invite friends to this round</div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">GROUP FEED</div>
+    <sc-for list="{{ feed }}" as="e" hint-placeholder-count="3">
+      <div style="display:flex; gap:12px; padding:12px 0; border-top:1px solid rgba(255,255,255,.07)">
+        <div style="width:5px; height:5px; border-radius:50%; margin-top:6px; background: {{ e.color }}"></div>
+        <div style="flex:1; font:400 12px/1.5 'Space Grotesk',sans-serif; color:#DCE3E4">{{ e.text }}</div>
+        <div style="font:400 9px/1 'JetBrains Mono',monospace; color:#596366; padding-top:3px">{{ e.time }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+</div>
+
+<div style="display:flex; border-top:1px solid rgba(255,255,255,.09); background:rgba(11,13,14,.94); padding:9px 8px 26px; backdrop-filter:blur(12px)">
+  <div onClick="{{ navPlay }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:5px 0; cursor:pointer">
+    <div style="width:16px; height:16px; border-radius:50%; border:2px solid {{ playC }}"></div>
+    <div style="font:500 8px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ playC }}">PLAY</div>
+  </div>
+  <div onClick="{{ navShots }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:5px 0; cursor:pointer">
+    <div style="width:16px; height:16px; border-left:2px solid {{ shotC }}; border-bottom:2px solid {{ shotC }}; border-radius:0 0 0 3px"></div>
+    <div style="font:500 8px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ shotC }}">SHOTS</div>
+  </div>
+  <div onClick="{{ navCard }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:5px 0; cursor:pointer">
+    <div style="width:16px; height:16px; border-radius:3px; border:2px solid {{ cardC }}; border-left-width:5px"></div>
+    <div style="font:500 8px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ cardC }}">CARD</div>
+  </div>
+  <div onClick="{{ navSummary }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:5px 0; cursor:pointer">
+    <div style="display:flex; align-items:flex-end; gap:2px; height:16px"><div style="width:3px; height:8px; background: {{ sumC }}"></div><div style="width:3px; height:14px; background: {{ sumC }}"></div><div style="width:3px; height:11px; background: {{ sumC }}"></div></div>
+    <div style="font:500 8px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ sumC }}">RECAP</div>
+  </div>
+  <div onClick="{{ navFriends }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:5px 0; cursor:pointer">
+    <div style="width:16px; height:16px; border-radius:50% 50% 50% 3px; border:2px solid {{ friendC }}"></div>
+    <div style="font:500 8px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color: {{ friendC }}">GROUP</div>
+  </div>
+</div>
+
+<sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute; inset:0; background:rgba(8,9,10,.72); backdrop-filter:blur(8px); display:flex; flex-direction:column; justify-content:flex-end; z-index:32">
+  <div onClick="{{ closeShare }}" style="flex:1"></div>
+  <div style="background:#0E1113; border-top:1px solid rgba(255,255,255,.12); border-radius:22px 22px 0 0; padding:20px 20px 30px; display:flex; flex-direction:column; gap:18px">
+    <div style="display:flex; align-items:center; justify-content:space-between">
+      <div style="font:600 16px/1 'Space Grotesk',sans-serif">Share this round</div>
+      <div onClick="{{ closeShare }}" style="width:32px; height:32px; border-radius:50%; background:#1C2124; display:flex; align-items:center; justify-content:center; font:400 15px 'Space Grotesk',sans-serif; color:#9AA4A7; cursor:pointer">×</div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-radius:14px; background:rgba(47,169,232,.08); border:1px solid rgba(47,169,232,.24)">
+      <div style="display:flex; flex-direction:column; gap:6px">
+        <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--acc,#2FA9E8)">ROUND CODE</div>
+        <div style="font:700 22px/1 'JetBrains Mono',monospace; letter-spacing:.06em">{{ roundCode }}</div>
+      </div>
+      <div onClick="{{ copyLink }}" style="border:1px solid rgba(47,169,232,.4); border-radius:10px; padding:11px 13px; font:500 9px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--acc,#2FA9E8); cursor:pointer">{{ copyLabel }}</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">PLAYING PARTNERS</div>
+      <sc-for list="{{ friends }}" as="fr" hint-placeholder-count="5">
+        <div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-top:1px solid rgba(255,255,255,.07)">
+          <div style="width:36px; height:36px; border-radius:50%; background:#1C2124; border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font:500 11px/1 'JetBrains Mono',monospace; color:#9AA4A7">{{ fr.initials }}</div>
+          <div style="flex:1; font:500 13px/1 'Space Grotesk',sans-serif">{{ fr.name }}</div>
+          <div onClick="{{ fr.on }}" style="border-radius:9px; padding:10px 13px; font:500 9px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ fr.bg }}; color: {{ fr.fg }}; border:1px solid {{ fr.bd }}">{{ fr.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font:400 9px/1.5 'JetBrains Mono',monospace; color:#596366">ANYONE WITH THE CODE CAN JOIN AND KEEP THEIR OWN CARD · SCORES SYNC LIVE</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute; inset:0; background:rgba(8,9,10,.72); backdrop-filter:blur(8px); display:flex; flex-direction:column; justify-content:flex-end; z-index:30">
+  <div onClick="{{ closeSheet }}" style="flex:1"></div>
+  <div style="background:#0E1113; border-top:1px solid rgba(255,255,255,.12); border-radius:22px 22px 0 0; padding:20px 20px 30px; display:flex; flex-direction:column; gap:18px">
+    <div style="display:flex; align-items:center; justify-content:space-between">
+      <div style="font:600 16px/1 'Space Grotesk',sans-serif">Where are you playing?</div>
+      <div onClick="{{ closeSheet }}" style="width:32px; height:32px; border-radius:50%; background:#1C2124; display:flex; align-items:center; justify-content:center; font:400 15px 'Space Grotesk',sans-serif; color:#9AA4A7; cursor:pointer">×</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">TEES</div>
+      <div style="display:flex; gap:7px">
+        <sc-for list="{{ teeOpts }}" as="t" hint-placeholder-count="4">
+          <div onClick="{{ t.on }}" style="flex:1; padding:11px 0; border-radius:10px; text-align:center; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.08em; cursor:pointer; background: {{ t.bg }}; color: {{ t.fg }}; border:1px solid {{ t.bd }}">{{ t.name }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px">
+      <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:#6E7A7D">COURSES IN NJ &amp; NY</div>
+      <div style="display:flex; gap:8px">
+        <input value="{{ query }}" onInput="{{ onQuery }}" placeholder="Search by name" style="flex:1; min-width:0; background:#1C2124; border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 13px; font:400 12px/1 'Space Grotesk',sans-serif; color:#F2F5F4; outline:none">
+        <div onClick="{{ doSearch }}" style="padding:12px 13px; border-radius:10px; background:var(--acc,#2FA9E8); color:#06181F; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.06em; cursor:pointer">FIND</div>
+        <div onClick="{{ nearMe }}" style="padding:12px 13px; border-radius:10px; border:1px solid rgba(255,255,255,.14); color:#9AA4A7; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.06em; cursor:pointer">NEAR ME</div>
+      </div>
+      <div style="font:400 9px/1.5 'JetBrains Mono',monospace; color: {{ statusColor }}">{{ searchStatus }}</div>
+      <sc-for list="{{ courseOpts }}" as="c" hint-placeholder-count="0">
+        <div onClick="{{ c.on }}" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 15px; border-radius:13px; cursor:pointer; background: {{ c.bg }}; border:1px solid {{ c.bd }}">
+          <div style="display:flex; flex-direction:column; gap:5px; min-width:0">
+            <div style="font:500 13px/1.2 'Space Grotesk',sans-serif; color: {{ c.nameColor }}">{{ c.name }}</div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace; color:#6E7A7D">{{ c.city }}</div>
+          </div>
+          <div style="font:500 11px/1 'JetBrains Mono',monospace; color:#9AA4A7; white-space:nowrap">{{ c.away }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 15px; border-radius:13px; background:rgba(47,169,232,.07); border:1px solid rgba(47,169,232,.2)">
+      <div style="display:flex; flex-direction:column; gap:6px">
+        <div style="font:400 9px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--acc,#2FA9E8)">PINS FROM MAP DATA</div>
+        <div style="font:400 10px/1.4 'JetBrains Mono',monospace; color:#9AA4A7">Tap the satellite map<br>to adjust any pin.</div>
+      </div>
+      <div style="font:700 20px/1 'JetBrains Mono',monospace">{{ pinCount }}/{{ holeCount }}</div>
+    </div>
+    <div style="font:400 9px/1.5 'JetBrains Mono',monospace; color:#596366">HOLES · PARS · GREENS FROM OPENSTREETMAP · IMAGERY FROM ESRI WORLD IMAGERY · BOTH FREE</div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0B0D0E"/><circle cx="50" cy="44" r="15" fill="none" stroke="#2FA9E8" stroke-width="3"/><rect x="34" y="66" width="32" height="4" rx="2" fill="#2FA9E8"/></svg></template>
+
+<div style="max-width:404px; display:flex; flex-direction:column; gap:7px; font:400 10px/1.7 'JetBrains Mono',monospace; color:#596366">
+<div style="letter-spacing:.14em; color:#8B9497">TRY IT</div>
+<div>Step holes with ‹ › · log a score in TAP mode, then switch to GRID and tap any cell · SHOTS maps the hole · RECAP and GROUP recompute live from the card.</div>
+<div style="letter-spacing:.14em; color:#8B9497; padding-top:6px">REAL GPS</div>
+<div>Tap the course bar → search any NJ or NY course by name, or NEAR ME. Holes, pars and green positions come from OpenStreetMap; satellite tiles from Esri. Distance to pin is live haversine from device GPS; tap the map to move a pin. All state is saved on the device. Location and tiles need the page opened directly, with permission granted.</div>
+</div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:1120},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#2FA9E8&quot;,&quot;options&quot;:[&quot;#2FA9E8&quot;,&quot;#C8FF4D&quot;,&quot;#F2C230&quot;,&quot;#8B7CF6&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;units&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;yards&quot;,&quot;meters&quot;],&quot;default&quot;:&quot;yards&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Content&quot;},&quot;showShotLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+const KEY="divot.v2";
+const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const ATTR="Imagery © Esri · Holes © OpenStreetMap";
+const OVERPASS="https://overpass-api.de/api/interpreter";
+const NYNJ="38.85,-79.80,45.02,-71.85";
+const CLUBS=[["Driver",254],["3 wood",228],["5 wood",212],["4 iron",196],["5 iron",186],["6 iron",167],["7 iron",148],["8 iron",136],["9 iron",124],["PW",112],["GW",96],["SW",78]];
+const TEES=[{name:"Red",f:.86},{name:"White",f:1},{name:"Blue",f:1.06},{name:"Black",f:1.12}];
+const NAMES={"-3":"Albatross","-2":"Eagle","-1":"Birdie","0":"Par","1":"Bogey","2":"Double bogey","3":"Triple bogey"};
+const C={acc:"#2FA9E8",text:"#F2F5F4",mute:"#6E7A7D",warm:"#E8894D",hot:"#E8574D"};
+
+class Component extends DCLogic {
+  state={screen:"play",hole:1,mode:"tap",board:"gross",tee:1,sheetOpen:false,
+    gps:"locating",pos:null,geoErr:null,
+    course:null,holes:{},holeCount:18,pins:{},
+    query:"",results:[],status:"Search a course, or tap NEAR ME.",busy:false,
+    scores:Array(18).fill(null),putts:Array(18).fill(null),fw:Array(18).fill(null),gir:Array(18).fill(false),
+    shots:{},shareOpen:false,invited:[],copied:false};
+
+  playRef=React.createRef();
+  shotRef=React.createRef();
+  _maps={};
+
+  componentDidMount(){
+    try{const raw=localStorage.getItem(KEY);
+      if(raw){const d=JSON.parse(raw); if(d&&typeof d==="object") this.setState(d);}}catch(e){}
+    this.watch();
+    this._mt=setInterval(()=>this.syncMaps(),700);
+  }
+  componentDidUpdate(){this.syncMaps();}
+  componentWillUnmount(){clearInterval(this._mt);
+    if(this._w!=null&&navigator.geolocation)navigator.geolocation.clearWatch(this._w);}
+
+  watch(){
+    if(!("geolocation" in navigator)){this.setState({gps:"error",geoErr:"No location on this device"});return;}
+    this._w=navigator.geolocation.watchPosition(
+      p=>this.setState({gps:"locked",geoErr:null,
+        pos:{lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.max(1,Math.round(p.coords.accuracy))}}),
+      e=>this.setState({gps:"error",geoErr:(e&&e.code===1)?"Location permission denied":"Waiting for a GPS fix"}),
+      {enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+  }
+  save(){try{const s=this.state;localStorage.setItem(KEY,JSON.stringify({course:s.course,holes:s.holes,
+    holeCount:s.holeCount,pins:s.pins,tee:s.tee,hole:s.hole,scores:s.scores,putts:s.putts,fw:s.fw,
+    gir:s.gir,shots:s.shots}));}catch(e){}}
+  dist(a,b){const R=6371000,t=Math.PI/180,dLa=(b.lat-a.lat)*t,dLo=(b.lng-a.lng)*t;
+    const h=Math.sin(dLa/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLo/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h))*1.09361;}
+  clubFor(d){let b=CLUBS[0];for(const c of CLUBS){if(Math.abs(c[1]-d)<Math.abs(b[1]-d))b=c;}return b;}
+  set(key,i,val){this.setState(s=>{const a=s[key].slice();a[i]=val;return {[key]:a};},()=>this.save());}
+  go(screen){return ()=>this.setState({screen});}
+  colorFor(d){return d<=-1?C.acc:d===0?C.text:d===1?C.warm:C.hot;}
+  label(score,par){const d=score-par;return NAMES[String(d)]||(d>0?"+"+d:"Under");}
+  unit(v){return typeof v!=="number"?v:(this.props.units==="meters"?Math.round(v*0.9144):Math.round(v));}
+  hkey(h){h=h||this.state.hole;return (this.state.course?this.state.course.id:"none")+":"+h;}
+  parFor(h){const d=this.state.holes[h];return (d&&d.par)||4;}
+  pinFor(h){const k=this.hkey(h),d=this.state.holes[h];
+    return this.state.pins[k]||(d&&d.green)||null;}
+
+  async ovp(q){const r=await fetch(OVERPASS,{method:"POST",body:"data="+encodeURIComponent(q)});
+    if(!r.ok) throw new Error("map data service returned "+r.status);
+    return r.json();}
+
+  async findCourses(mode){
+    const s=this.state;
+    let q;
+    if(mode==="near"){
+      if(!s.pos){this.setState({status:"Waiting for a GPS fix — try again in a moment."});return;}
+      q='[out:json][timeout:25];nwr["leisure"="golf_course"](around:30000,'+s.pos.lat+','+s.pos.lng+');out center tags 40;';
+    }else{
+      const t=(s.query||"").trim();
+      if(t.length<3){this.setState({status:"Type at least three letters."});return;}
+      q='[out:json][timeout:25];nwr["leisure"="golf_course"]["name"~"'+t.replace(/["\\]/g,"")+'",i]('+NYNJ+');out center tags 40;';
+    }
+    this.setState({busy:true,status:mode==="near"?"Looking for courses within 30 km…":"Searching NJ and NY…"});
+    try{
+      const d=await this.ovp(q);
+      const seen={},res=[];
+      (d.elements||[]).forEach(el=>{
+        const c=el.center||el, n=el.tags&&el.tags.name;
+        if(!n||!c||!c.lat||seen[n])return; seen[n]=1;
+        res.push({id:el.type+"/"+el.id,name:n,lat:c.lat,lng:c.lon,
+          city:(el.tags["addr:city"]||el.tags["addr:state"]||el.tags.operator||"").slice(0,34)});
+      });
+      res.sort((x,y)=>this.state.pos
+        ? this.dist(this.state.pos,x)-this.dist(this.state.pos,y)
+        : x.name.localeCompare(y.name));
+      this.setState({results:res,busy:false,
+        status:res.length?res.length+" course"+(res.length===1?"":"s")+" found.":"Nothing found — try a shorter name."});
+    }catch(e){this.setState({busy:false,status:"Couldn't reach the map data service. Check the connection."});}
+  }
+
+  async pickCourse(c){
+    this.setState({course:c,holes:{},holeCount:18,hole:1,sheetOpen:false,
+      scores:Array(18).fill(null),putts:Array(18).fill(null),fw:Array(18).fill(null),
+      gir:Array(18).fill(false),shots:{},status:"Loading holes for "+c.name+"…"},()=>this.save());
+    const q='[out:json][timeout:30];nwr["golf"="hole"](around:1800,'+c.lat+','+c.lng+');out center tags;'+
+            'nwr["golf"="green"](around:1800,'+c.lat+','+c.lng+');out center tags;';
+    try{
+      const d=await this.ovp(q);
+      const holes=[],greens=[];
+      (d.elements||[]).forEach(el=>{
+        const t=el.tags||{},p=el.center||el; if(!p||!p.lat)return;
+        if(t.golf==="hole") holes.push({n:parseInt(t.ref,10),par:parseInt(t.par,10)||null,
+          dist:t.dist?Math.round(parseFloat(t.dist)*1.09361):null,lat:p.lat,lng:p.lon});
+        else if(t.golf==="green") greens.push({lat:p.lat,lng:p.lon});
+      });
+      const map={};let max=0;
+      holes.forEach((h,idx)=>{
+        const n=h.n||idx+1; if(!n||n>18)return; max=Math.max(max,n);
+        let g=null,best=1e9;
+        greens.forEach(gr=>{const dd=this.dist({lat:h.lat,lng:h.lng},gr);
+          if(dd<best&&dd<700){best=dd;g=gr;}});
+        map[n]={par:h.par,dist:h.dist,green:g,tee:{lat:h.lat,lng:h.lng}};
+      });
+      const withGreens=Object.keys(map).filter(k=>map[k].green).length;
+      this.setState({holes:map,holeCount:max||18,
+        status:Object.keys(map).length
+          ? Object.keys(map).length+" holes loaded · "+withGreens+" greens located"
+          : "No hole data mapped for this course yet — tap each green on the satellite view to set its pin."},
+        ()=>{this.save();this.syncMaps();});
+    }catch(e){this.setState({status:"Loaded the course, but hole data didn't come through. Tap greens on the map to set pins."});}
+  }
+
+  setPin(lat,lng){if(!this.state.course)return;
+    this.setState(st=>({pins:{...st.pins,[this.hkey()]:{lat,lng}}}),()=>{this.save();this.syncMaps();});}
+
+  syncMaps(){
+    const L=window.L; if(!L) return;
+    [["play",this.playRef],["shot",this.shotRef]].forEach(([k,r])=>{
+      const el=r.current;
+      if(!el){if(this._maps[k]){this._maps[k].map.remove();delete this._maps[k];}return;}
+      if(!this._maps[k]){
+        const map=L.map(el,{zoomControl:false,attributionControl:true});
+        L.tileLayer(TILE,{maxZoom:19,attribution:ATTR}).addTo(map);
+        const c=this.state.course;
+        map.setView(c?[c.lat,c.lng]:[40.75,-74.2],c?16:9);
+        map.on("click",e=>this.setPin(e.latlng.lat,e.latlng.lng));
+        this._maps[k]={map,layer:L.layerGroup().addTo(map),fit:""};
+        setTimeout(()=>map.invalidateSize(),150);
+      }
+      this.drawMap(k);
+    });
+  }
+
+  drawMap(k){
+    const m=this._maps[k],L=window.L; if(!m) return;
+    const s=this.state,pin=this.pinFor(s.hole),pos=s.pos,pts=[];
+    m.layer.clearLayers();
+    if(pin){L.circleMarker([pin.lat,pin.lng],{radius:8,color:C.acc,weight:2,fillColor:C.acc,fillOpacity:.3})
+      .addTo(m.layer);pts.push([pin.lat,pin.lng]);}
+    if(pos){L.circleMarker([pos.lat,pos.lng],{radius:5,color:"#fff",weight:2,fillColor:"#fff",fillOpacity:1})
+      .addTo(m.layer);pts.push([pos.lat,pos.lng]);}
+    if(pin&&pos){
+      const line=L.polyline([[pos.lat,pos.lng],[pin.lat,pin.lng]],
+        {color:C.acc,weight:1.5,dashArray:"5 6"}).addTo(m.layer);
+      if(this.props.showShotLabels??true)
+        line.bindTooltip(this.unit(this.dist(pos,pin))+(this.props.units==="meters"?" m":" yds"),
+          {permanent:true,direction:"center",className:"dv-tip"}).openTooltip();
+    }
+    if(k==="shot"){
+      const sh=s.shots[this.hkey()]||[];
+      sh.forEach((p,idx)=>{L.circleMarker([p.lat,p.lng],
+        {radius:5,color:"#F2F5F4",weight:2,fillColor:"#0B0D0E",fillOpacity:1}).addTo(m.layer)
+        .bindTooltip(String(idx+1),{permanent:true,direction:"top",className:"dv-tip"});
+        pts.push([p.lat,p.lng]);});
+      if(sh.length>1||(sh.length&&pin))
+        L.polyline(sh.map(p=>[p.lat,p.lng]).concat(pin?[[pin.lat,pin.lng]]:[]),
+          {color:"#F2F5F4",weight:1.2,dashArray:"3 5",opacity:.85}).addTo(m.layer);
+    }
+    const sig=k+"|"+s.hole+"|"+pts.length+"|"+(pin?1:0);
+    if(pts.length&&m.fit!==sig){
+      m.fit=sig;
+      if(pts.length>1)m.map.fitBounds(pts,{padding:[48,48],maxZoom:18});
+      else m.map.setView(pts[0],17);
+    }
+  }
+
+  buildBoard(acc,myDelta,myTotal,thru){
+    const net=this.state.board==="net";
+    const raw=[{name:"You",initials:"JM",hcp:12,thru,gross:myTotal||0,delta:myDelta,me:true},
+      {name:"Dana Whitlock",initials:"DW",hcp:8,thru:7,gross:31,delta:3,me:false},
+      {name:"Ray Osei",initials:"RO",hcp:16,thru:6,gross:29,delta:5,me:false},
+      {name:"Priya Menon",initials:"PM",hcp:21,thru:7,gross:36,delta:8,me:false}];
+    const rows=raw.map(p=>{const adj=net?Math.round(p.hcp*(p.thru/18)):0;
+      return {...p,total:p.gross-adj,rel:p.delta-adj};});
+    rows.sort((x,y)=>x.rel-y.rel);
+    return rows.map((p,k)=>({pos:k+1,name:p.name,initials:p.initials,hcp:p.hcp,thru:p.thru,
+      total:p.total,rel:p.rel>0?"+"+p.rel:p.rel===0?"E":String(p.rel),
+      relColor:p.rel<=0?acc:"#9AA4A7",nameColor:p.me?acc:C.text,
+      bg:p.me?"rgba(47,169,232,.10)":"#14181A",
+      bd:p.me?"rgba(47,169,232,.35)":"rgba(255,255,255,.07)"}));
+  }
+
+  renderVals(){
+    const s=this.state,i=s.hole-1,acc=this.props.accent??C.acc;
+    const units=this.props.units==="meters"?"M":"YDS";
+    const teeF=TEES[s.tee].f, co=s.course;
+    const hd=s.holes[s.hole]||{}, par=this.parFor(s.hole);
+    const pin=this.pinFor(s.hole);
+    const live=(pin&&s.pos)?Math.round(this.dist(s.pos,pin)):null;
+    const estPin=hd.dist?Math.max(58,Math.round(hd.dist*teeF)-268):null;
+    const rawPin=live!=null?Math.max(1,live):(estPin||142);
+    const cl=this.clubFor(rawPin), clubDelta=rawPin-cl[1];
+    const cur=s.scores[i]==null?par:s.scores[i];
+    const played=s.scores.map((v,k)=>({v,k})).filter(o=>o.v!=null);
+    const totalScore=played.reduce((a,o)=>a+o.v,0);
+    const parThru=played.reduce((a,o)=>a+this.parFor(o.k+1),0);
+    const delta=totalScore-parThru;
+    const shotList=s.shots[this.hkey()]||[];
+    const legs=shotList.map((p,k)=>{
+      const nxt=shotList[k+1]||pin;
+      const d=nxt?Math.round(this.dist(p,nxt)):null;
+      const c2=d!=null?this.clubFor(d):null;
+      return {n:k+1,club:c2?c2[0]:"Shot",note:nxt?(shotList[k+1]?"To next position":"To the pin"):"Awaiting next point",
+        dist:d!=null?this.unit(d):"–",color:k===shotList.length-1?acc:C.text};});
+    const rowFor=(range)=>range.map(k=>{
+      const v=s.scores[k],p2=this.parFor(k+1),d=v==null?null:v-p2,
+        on=()=>this.setState({hole:k+1,screen:"card"});
+      return {n:k+1,par:p2,score:v==null?"–":v,on,
+        color:v==null?"#3E4749":this.colorFor(d),
+        bg:k===i?"rgba(47,169,232,.16)":(d!=null&&d<=-1?"rgba(47,169,232,.10)":"transparent"),
+        bd:k===i?"rgba(47,169,232,.55)":"rgba(255,255,255,.07)"};});
+    const pars=[];for(let h=1;h<=18;h++)pars.push(this.parFor(h));
+    const totalLen=Object.keys(s.holes).reduce((a,k)=>a+(s.holes[k].dist||0),0);
+    return {
+      acc,unitLabel:units,
+      courseName:co?co.name:"Pick a course",
+      teeName:TEES[s.tee].name,
+      coursePar:pars.reduce((a,b)=>a+b,0),
+      courseLen:totalLen?this.unit(Math.round(totalLen*teeF)):"—",
+      playMapRef:this.playRef, shotMapRef:this.shotRef,
+      mapHint:co?(pin?("HOLE "+s.hole+" · PIN FROM MAP DATA · TAP TO ADJUST"):("HOLE "+s.hole+" · TAP THE GREEN TO SET THE PIN")):"PICK A COURSE TO LOAD SATELLITE VIEW",
+      shotHint:co?"TAP \"ADD SHOT\" AT EACH BALL POSITION":"PICK A COURSE FIRST",
+      query:s.query,onQuery:e=>this.setState({query:e.target.value}),
+      doSearch:()=>this.findCourses("name"), nearMe:()=>this.findCourses("near"),
+      searchStatus:s.busy?"WORKING…":s.status.toUpperCase(),
+      statusColor:s.busy?acc:"#6E7A7D",
+      courseOpts:s.results.map(c=>({name:c.name,city:c.city||"—",
+        away:s.pos?this.unit(this.dist(s.pos,c))+" "+units:"",
+        on:()=>this.pickCourse(c),
+        bg:co&&co.id===c.id?"rgba(47,169,232,.10)":"#14181A",
+        bd:co&&co.id===c.id?"rgba(47,169,232,.35)":"rgba(255,255,255,.07)",
+        nameColor:co&&co.id===c.id?acc:C.text})),
+      pinCount:Object.keys(s.holes).filter(k=>s.holes[k].green).length+
+        Object.keys(s.pins).filter(k=>co&&k.indexOf(co.id+":")===0).length,
+      holeCount:s.holeCount,
+      teeOpts:TEES.map((t,k)=>({name:t.name.toUpperCase(),on:()=>this.setState({tee:k},()=>this.save()),
+        bg:k===s.tee?acc:"#1C2124",fg:k===s.tee?"#06181F":"#9AA4A7",
+        bd:k===s.tee?"rgba(47,169,232,.5)":"rgba(255,255,255,.08)"})),
+      sheetOpen:s.sheetOpen,openSheet:()=>this.setState({sheetOpen:true}),
+      closeSheet:()=>this.setState({sheetOpen:false}),
+      isPlay:s.screen==="play",isCard:s.screen==="card",isShots:s.screen==="shots",
+      isSummary:s.screen==="summary",isFriends:s.screen==="friends",
+      navPlay:this.go("play"),navCard:this.go("card"),navShots:this.go("shots"),
+      navSummary:this.go("summary"),navFriends:this.go("friends"),
+      playC:s.screen==="play"?acc:"#596366",shotC:s.screen==="shots"?acc:"#596366",
+      cardC:s.screen==="card"?acc:"#596366",sumC:s.screen==="summary"?acc:"#596366",
+      friendC:s.screen==="friends"?acc:"#596366",
+      hole:s.hole,par,holeYds:hd.dist?this.unit(Math.round(hd.dist*teeF)):"—",
+      thru:played.length,totalScore:played.length?totalScore:"–",parThru,
+      deltaText:!played.length?"E":(delta>0?"+"+delta:delta===0?"E":String(delta)),
+      prevHole:()=>this.setState(st=>({hole:Math.max(1,st.hole-1)}),()=>this.save()),
+      nextHole:()=>this.setState(st=>({hole:Math.min(st.holeCount||18,st.hole+1)}),()=>this.save()),
+      toPin:this.unit(rawPin),front:this.unit(Math.max(1,rawPin-14)),back:this.unit(rawPin+16),
+      playsLike:this.unit(rawPin+4),club:cl[0],clubAvg:this.unit(cl[1]),
+      clubDelta:clubDelta===0?"dead on":(clubDelta>0?"+"+clubDelta+" over avg":clubDelta+" under avg"),
+      pinSource:live!=null?"LIVE GPS TO PIN":(pin?"NO GPS FIX YET":"SET THIS HOLE'S PIN ON THE MAP"),
+      pinSourceColor:live!=null?acc:"#6E7A7D",
+      captureLabel:pin?"PIN SET":"TAP MAP FOR PIN",
+      captureGreen:()=>{if(s.pos)this.setPin(s.pos.lat,s.pos.lng);},
+      gpsLabel:s.gps==="error"?(s.geoErr||"Location unavailable").toUpperCase()
+        :(s.pos?("GPS FIX · ±"+s.pos.acc+" M"):"ACQUIRING SATELLITES…"),
+      gpsColor:s.gps==="locked"?acc:"#D9A94A",
+      gpsBg:s.gps==="locked"?"rgba(47,169,232,.07)":"rgba(217,169,74,.07)",
+      gpsBd:s.gps==="locked"?"rgba(47,169,232,.22)":"rgba(217,169,74,.24)",
+      recenter:()=>{if(this._w!=null&&navigator.geolocation)navigator.geolocation.clearWatch(this._w);
+        this.setState({gps:"locating"});this.watch();},
+      addShotLabel:s.gps==="locked"?"Add shot at my position":"Waiting for GPS…",
+      shots:legs,shotsEmpty:legs.length===0,
+      addShot:()=>{if(!s.pos)return;this.setState(st=>{const k=this.hkey(),m={...st.shots};
+        m[k]=(m[k]||[]).concat([{lat:st.pos.lat,lng:st.pos.lng}]);return {shots:m};},
+        ()=>{this.save();this.syncMaps();});},
+      clubs:[{name:"DRIVER",dist:this.unit(254)},{name:"5 IRON",dist:this.unit(186)},
+        {name:"7 IRON",dist:this.unit(148)},{name:"PW",dist:this.unit(118)}],
+      showLabels:this.props.showShotLabels??true,
+      isTap:s.mode==="tap",isGrid:s.mode==="grid",
+      setTap:()=>this.setState({mode:"tap"}),setGrid:()=>this.setState({mode:"grid"}),
+      tapBg:s.mode==="tap"?acc:"transparent",tapFg:s.mode==="tap"?"#06181F":"#9AA4A7",
+      gridBg:s.mode==="grid"?acc:"transparent",gridFg:s.mode==="grid"?"#06181F":"#9AA4A7",
+      curScore:cur,curLabel:this.label(cur,par),curColor:this.colorFor(cur-par),
+      incScore:()=>this.set("scores",i,Math.min(12,cur+1)),
+      decScore:()=>this.set("scores",i,Math.max(1,cur-1)),
+      puttOpts:[0,1,2,3,4].map(n=>{const on=s.putts[i]===n;return {n,on:()=>this.set("putts",i,n),
+        bg:on?"rgba(47,169,232,.16)":"#1C2124",fg:on?acc:"#9AA4A7",
+        bd:on?"rgba(47,169,232,.5)":"rgba(255,255,255,.08)"};}),
+      fwOpts:[["left","LEFT"],["hit","HIT"],["right","RIGHT"]].map(([v,label])=>{const on=s.fw[i]===v;
+        return {label,on:()=>this.set("fw",i,v),bg:on?"rgba(47,169,232,.16)":"#1C2124",
+          fg:on?acc:"#9AA4A7",bd:on?"rgba(47,169,232,.5)":"rgba(255,255,255,.08)"};}),
+      toggleGir:()=>this.set("gir",i,!s.gir[i]),
+      girTrack:s.gir[i]?acc:"#1C2124",girJustify:s.gir[i]?"flex-end":"flex-start",
+      saveLabel:s.hole>=(s.holeCount||18)?"Finish round":"Save · hole "+(s.hole+1),
+      saveNext:()=>{this.set("scores",i,cur);
+        if(s.hole>=(s.holeCount||18))this.setState({screen:"summary"});
+        else this.setState({hole:s.hole+1},()=>this.save());},
+      front9:rowFor([0,1,2,3,4,5,6,7,8]),back9:rowFor([9,10,11,12,13,14,15,16,17]),
+      parOut:pars.slice(0,9).reduce((a,b)=>a+b,0),parIn:pars.slice(9).reduce((a,b)=>a+b,0),
+      scoreOut:s.scores.slice(0,9).reduce((a,v)=>a+(v||0),0)||"–",
+      scoreIn:s.scores.slice(9).reduce((a,v)=>a+(v||0),0)||"–",
+      played:played.map(o=>{const d=o.v-this.parFor(o.k+1);
+        return {n:o.k+1,barH:(28+Math.min(o.v,8)*7)+"px",color:d===0?"#495356":this.colorFor(d)};}),
+      birdies:played.filter(o=>o.v-this.parFor(o.k+1)<=-1).length,
+      pars:played.filter(o=>o.v===this.parFor(o.k+1)).length,
+      girPct:played.length?Math.round(played.filter(o=>s.gir[o.k]).length/played.length*100):0,
+      puttsTotal:s.putts.reduce((a,v)=>a+(v||0),0),
+      setGross:()=>this.setState({board:"gross"}),setNet:()=>this.setState({board:"net"}),
+      grossBg:s.board==="gross"?acc:"transparent",grossFg:s.board==="gross"?"#06181F":"#9AA4A7",
+      netBg:s.board==="net"?acc:"transparent",netFg:s.board==="net"?"#06181F":"#9AA4A7",
+      board:this.buildBoard(acc,delta,totalScore,played.length),
+      feed:[{text:"Dana holed a 12-footer on 6 for birdie.",time:"2M",color:acc},
+        {text:"You won hole 5 — skin carried from 4.",time:"14M",color:C.text},
+        {text:"Ray joined the round from the 3rd tee.",time:"41M",color:"#596366"}],
+      shareOpen:s.shareOpen,roundCode:"KR-4821",
+      openShare:()=>this.setState({shareOpen:true}),
+      closeShare:()=>this.setState({shareOpen:false,copied:false}),
+      copyLabel:s.copied?"LINK COPIED":"COPY LINK",
+      copyLink:()=>this.setState({copied:true}),
+      friends:[["Dana Whitlock","DW"],["Ray Osei","RO"],["Priya Menon","PM"],["Tomas Beck","TB"],["Sam Iyer","SI"]]
+        .map(([name,initials])=>{const on=s.invited.includes(name);
+          return {name,initials,label:on?"INVITED":"INVITE",
+            fg:on?"#06181F":"#9AA4A7",bg:on?acc:"transparent",
+            bd:on?acc:"rgba(255,255,255,.16)",
+            on:()=>this.setState(st=>({invited:on?st.invited:st.invited.concat([name])}))};})
+    };
+  }
+}
+</script>
+</body>
+</html>

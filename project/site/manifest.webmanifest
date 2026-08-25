@@ -1,0 +1,16 @@
+{
+  "name": "Divot Golf",
+  "short_name": "Divot",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0B0D0E",
+  "theme_color": "#0B0D0E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
