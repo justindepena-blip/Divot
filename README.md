@@ -9,6 +9,13 @@ to `main`:
 
 **https://justindepena-blip.github.io/Divot/**
 
+> **One-time setup:** GitHub Pages must be enabled before the first deploy
+> succeeds. Go to **Settings -> Pages -> Build and deployment** and set
+> **Source** to **GitHub Actions**, then re-run the "Deploy web to GitHub
+> Pages" workflow. The workflow token can deploy to Pages but is not
+> permitted to create the Pages site itself, so this step cannot be
+> automated.
+
 Nothing to install — open the link on a phone or desktop. On iOS Safari or
 Android Chrome, use *Share → Add to Home Screen* for a full-screen, app-like
 launcher.
